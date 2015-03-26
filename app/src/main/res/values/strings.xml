@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GoGlobalTask</string>
+    <string name="title_section1">Capture</string>
+    <string name="title_section2">Other</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_example">Example action</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="start_image_capture">Take a New Picture</string>
+    <string name="capture_image">Snap it!</string>
+    <string name="save_image">Save Picture</string>
+    <string name="recapture_image">Retake Picture</string>
+    <string name="capturing_image">Taking New Picture</string>
+    <string name="flash_on">On Flash</string>
+    <string name="flash_off">Off Flash</string>
+    <string name="selfie_camera">Selfie camera</string>
+    <string name="normal_camera">Normal camera</string>
+
+    <string name="feedback_text">Feedback:</string>
+    <string name="feedback_button">Send Feedback</string>
+    <string name="feedback_cancel_button">Cancel</string>
+    <string name="feedback_checkbox">Attach image to feedback</string>
+
+    <string-array name="other_fragment">
+        <item>Leave the feedback</item>
+        <item>About this program</item>
+    </string-array>
+</resources>
