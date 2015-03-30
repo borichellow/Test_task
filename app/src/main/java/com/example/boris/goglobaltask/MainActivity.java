@@ -64,23 +64,21 @@ public class MainActivity extends ActionBarActivity
                 .commit();
     }
 
+    public void startOtherFragment(android.app.Fragment fragment){
+        fTrans = getFragmentManager().beginTransaction();
+        fTrans.replace(R.id.container, fragment);
+        fTrans.commit();
+    }
+
     public void onSectionAttached(int number) {
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
-
-                fTrans = getFragmentManager().beginTransaction();
-                fTrans.replace(R.id.container, capture);
-                fTrans.commit();
-
+                startOtherFragment(capture);
                 break;
             case 2:
                 mTitle = getString(R.string.title_section2);
-
-                fTrans = getFragmentManager().beginTransaction();
-                fTrans.replace(R.id.container, other);
-                fTrans.commit();
-
+                startOtherFragment(other);
                 break;
         }
     }

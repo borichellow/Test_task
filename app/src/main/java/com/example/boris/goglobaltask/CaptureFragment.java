@@ -1,11 +1,14 @@
 package com.example.boris.goglobaltask;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -29,6 +32,7 @@ public class CaptureFragment extends Fragment
         implements Camera.PictureCallback, SurfaceHolder.Callback {
 
     private static final String KEY_IS_CAPTURING = "is_capturing";
+    private final String PACKAG_NAME = "com.example.boris.goglobaltask";
     private Camera mCamera;
     private ImageView mCameraImage;
     private SurfaceView mCameraPreview;
@@ -163,9 +167,26 @@ public class CaptureFragment extends Fragment
         mSaveImageButton.setEnabled(false);
     }
 
+    private int[] getNewImageSizes(Bitmap bitmap){
+        Display display = getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        float screenWidth = size.x;
+        float screenHeight = size.y;
+        float imageWidth = bitmap.getWidth();
+        float imageHeight = bitmap.getHeight();
+
+        float xKoef = screenWidth / imageWidth;
+        float yKoef = screenHeight / imageHeight;
+
+        float koef = (xKoef > yKoef ? yKoef : xKoef);
+        return new int[]{(int) (imageWidth * koef), (int) (imageHeight * koef)};
+    }
+
     private void setupImageDisplay() {
         Bitmap bitmap = BitmapFactory.decodeByteArray(mCameraData, 0, mCameraData.length);
-        mCameraImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 600, 600, true));
+        int[] imageSizes = getNewImageSizes(bitmap);
+        mCameraImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, imageSizes[0], imageSizes[1], true));
         mCamera.stopPreview();
         mCameraPreview.setVisibility(View.INVISIBLE);
         mCameraImage.setVisibility(View.VISIBLE);
@@ -234,7 +255,7 @@ public class CaptureFragment extends Fragment
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
             imageDirectory = new File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                    "com.example.boris.goglobaltask");
+                    PACKAG_NAME);
             if (!imageDirectory.exists() && !imageDirectory.mkdirs()) {
                 imageDirectory = null;
             } else {
@@ -284,7 +305,6 @@ public class CaptureFragment extends Fragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
 
         View view =  inflater.inflate(R.layout.fragment_capture, container, false);
 

@@ -27,18 +27,25 @@ public class Api {
         return instance;
     }
 
-    private void requestPost(String url, HashMap params, Response.Listener responseListener, Response.ErrorListener errorListener, Activity obj){
+    private static final String BASE_URL = "http://37.233.102.48";
+    private static final String FEEDBACK = "/feedback";
+
+    private void requestPost(String url, HashMap<String, String> params, Response.Listener responseListener,
+                             Response.ErrorListener errorListener, Activity obj){
         RequestQueue queue = Volley.newRequestQueue(obj);
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params), responseListener, errorListener);
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest(Request.Method.POST, url,
+                new JSONObject(params), responseListener, errorListener);
         queue.add(jsObjRequest);
     }
 
-    public void sendFeedback(Response.Listener responseListener, Response.ErrorListener errorListener, Activity obj, HashMap params){
-        String url = "http://37.233.102.48/feedback";
+    public void sendFeedback(Response.Listener responseListener, Response.ErrorListener errorListener,
+                             Activity obj, HashMap<String, String> params){
+        String url = BASE_URL + FEEDBACK;
         requestPost(url, params, responseListener, errorListener, obj);
     }
 
-    public void sendImage(Response.Listener responseListener, Response.ErrorListener errorListener, Activity obj, HashMap image, String url){
+    public void sendImage(Response.Listener responseListener, Response.ErrorListener errorListener,
+                          Activity obj, HashMap<String, String> image, String url){
         requestPost(url, image,responseListener, errorListener, obj);
     }
 }

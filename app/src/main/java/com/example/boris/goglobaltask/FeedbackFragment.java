@@ -7,15 +7,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.HashMap;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Base64;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,17 +39,17 @@ import org.json.JSONObject;
 public class FeedbackFragment extends Fragment {
 
     private CheckBox attachImage;
-    private File lastImage = null;
+    private File lastImage;
     private double latitude;
     private double longitude;
     private EditText feedbackText;
-    private JSONObject responseFromServer;
-    private Bitmap bitmap;
+    private Bitmap bitmap = null;
+    private final String packageName = "com.example.boris.goglobaltask";
 
     private View.OnClickListener sendFeedbackToServer = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            send();
+            sendFeedback();
         }
     };
 
@@ -58,9 +63,35 @@ public class FeedbackFragment extends Fragment {
         }
     };
 
+    private int[] getNewImageSizes(Bitmap bitmap){
+        Display display = getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        float screenWidth = size.x;
+        float screenHeight = size.y;
+        float imageWidth = bitmap.getWidth();
+        float imageHeight = bitmap.getHeight();
+
+        float xKoef = screenWidth / imageWidth;
+        float yKoef = screenHeight / imageHeight;
+
+        float koef = (xKoef > yKoef ? yKoef : xKoef);
+        return new int[]{(int) (imageWidth * koef), (int) (imageHeight * koef)};
+    }
+
+    private void getLastFile(){
+        String path = "/" + packageName + "/";
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), path);
+        File[] files = f.listFiles();
+        if (files.length > 0){
+            lastImage = files[files.length - 1];
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_feedback, container, false);
+        lastImage = null;
 
         getLastFile();
         if(lastImage != null){
@@ -70,7 +101,8 @@ public class FeedbackFragment extends Fragment {
             bitmap = BitmapFactory.decodeFile(lastImage.getPath());
             ImageView image = (ImageView) view.findViewById(R.id.lastImage);
             image.setVisibility(View.VISIBLE);
-            image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 400, 400, true));
+            int[] imageSizes = getNewImageSizes(bitmap);
+            image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, imageSizes[0], imageSizes[1], true));
         }
 
         Button sendFeedback = (Button) view.findViewById(R.id.buttonSendFeedback);
@@ -82,15 +114,6 @@ public class FeedbackFragment extends Fragment {
         cancelButton.setOnClickListener(cancel);
 
         return view;
-    }
-
-    private void getLastFile(){
-        String path = "/com.example.boris.goglobaltask/";
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), path);
-        File[] files = f.listFiles();
-        if (files.length > 0){
-            lastImage = files[files.length - 1];
-        }
     }
 
     private void getLocation(){
@@ -108,33 +131,37 @@ public class FeedbackFragment extends Fragment {
         return temp;
     }
 
-    private boolean waitForResponse(){
-        boolean flag = false;
-        for(int i = 0 ; i < 30 ; i++){
-            if(responseFromServer != null) {
-                flag = true;
-                break;
+    private void sendImage(String url){
+
+        Response.ErrorListener imageErrorListener = new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO Auto-generated method stub
+                Toast.makeText(getActivity(), "File wasn't sent :(",
+                        Toast.LENGTH_SHORT).show();
             }
-            try {
-                Thread.sleep(500);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        return flag;
-    }
+        };
 
-    private void send(){
-
-        getLocation();
-
-        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+        Response.Listener<JSONObject> imageResponseListener = new Response.Listener<JSONObject>() {
 
             @Override
             public void onResponse(JSONObject response) {
-                responseFromServer = response;
+                Toast.makeText(getActivity(), "File was sent",
+                        Toast.LENGTH_SHORT).show();
             }
         };
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("file", bitMapToString(bitmap));
+        Api.getInstance().sendImage(imageResponseListener, imageErrorListener, getActivity(), params, url);
+
+    }
+
+    private void sendFeedback(){
+
+        getLocation();
+
         Response.ErrorListener errorListener = new Response.ErrorListener() {
 
             @Override
@@ -145,6 +172,24 @@ public class FeedbackFragment extends Fragment {
             }
         };
 
+        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+
+            @Override
+            public void onResponse(JSONObject response) {
+                Toast.makeText(getActivity(), "Feedback was sent",
+                        Toast.LENGTH_SHORT).show();
+                if(attachImage.isChecked()) {
+                    String url = "";
+                    try {
+                        url = response.getString("contentUrl");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    sendImage(url);
+                }
+            }
+        };
+
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("feedback", feedbackText.getText().toString());
         params.put("latitude", String.valueOf(latitude));
@@ -152,26 +197,6 @@ public class FeedbackFragment extends Fragment {
 
         Api.getInstance().sendFeedback(responseListener, errorListener, getActivity(), params);
 
-        if(attachImage.isChecked()) {
-//            send request with image
-            if (waitForResponse()){
-                String url = "";
-                try{
-                    url = responseFromServer.getString("contentUrl");
-                }catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                params.put("file", bitMapToString(bitmap));
-                Api.getInstance().sendImage(responseListener, errorListener, getActivity(), params, url);
-
-                Toast.makeText(getActivity(), "File was sent",
-                        Toast.LENGTH_SHORT).show();
-            }else {
-                Toast.makeText(getActivity(), "File wasn't sent :(",
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
-        responseListener = null;
     }
 
 }

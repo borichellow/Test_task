@@ -1,5 +1,6 @@
 package com.example.boris.goglobaltask;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -49,11 +50,10 @@ public class OtherFragment extends Fragment {
     private void showProperties() {
         String version = "";
         String packageName = "";
-        Context context= getActivity();
         try {
-            PackageManager manager = context.getPackageManager();
+            PackageManager manager = getActivity().getPackageManager();
             PackageInfo info = manager.getPackageInfo(
-                    context.getPackageName(), 0);
+                    getActivity().getPackageName(), 0);
             version = info.versionName;
             packageName = info.packageName;
         } catch (Exception e) {}
