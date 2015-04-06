@@ -1,6 +1,5 @@
 package com.example.boris.goglobaltask;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -44,7 +43,7 @@ public class CaptureFragment extends Fragment
     private Button flashButton;
     private Button selfieButton;
     private int frontCameraId = -1;
-    private int baskCameraId = -1;
+    private int baсkCameraId = -1;
 
     private View.OnClickListener mCaptureImageButtonClickListener = new View.OnClickListener() {
         @Override
@@ -210,16 +209,19 @@ public class CaptureFragment extends Fragment
     }
 
     private void switchCamera(){
-        if(frontCameraId == -1 && baskCameraId == -1) {
+        if(frontCameraId == -1 && baсkCameraId == -1) {
             findAllCameras();
         }
         int camId;
         if(selfieButton.getText() == getResources().getString(R.string.selfie_camera)) {
             camId = frontCameraId;
             selfieButton.setText(getResources().getString(R.string.normal_camera));
+            flashButton.setText(getResources().getString(R.string.flash_on));
+            flashButton.setEnabled(false);
         }else {
-            camId = baskCameraId;
+            camId = baсkCameraId;
             selfieButton.setText(getResources().getString(R.string.selfie_camera));
+            flashButton.setEnabled(true);
         }
         mCamera.release();
         try {
@@ -244,7 +246,7 @@ public class CaptureFragment extends Fragment
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 frontCameraId = camIdx;
             } else if(cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                baskCameraId = camIdx;
+                baсkCameraId = camIdx;
             }
         }
     }
